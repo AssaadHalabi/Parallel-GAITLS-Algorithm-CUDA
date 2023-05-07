@@ -1,63 +1,42 @@
-Input: me graph G(V, E, w), the cuto we, the cwent soluhon DT
-Output: the local best soluhon D
-tabulist 0;
-D DT;
-foreac uertew u E V do
-ifo E DTthen
-| Dscore[ul -| x |{ulN E N[ul and u isjustdominated by u)|;
-
-else
-| Dscore[ul |{ulu E N[ul andis nondominated }
-
+Input: The graph G(V, E, W), the cutoff time, the current solution DT
+Output: the local best solution DT'
+tabu_list <- 0;
+DT' <- DT;
+for each vertex v ∈ V do
+    if v ∈ DT then
+        Dscore[v]<- -1 * |{u|u ∈ N[v] and u is just dominated by v}|;
+    end
+    else
+|       Dscore[v] <- |{u|u ∈ N[v] and is non-dominated }|;
+    end
 end
-
 
 
 repeat
-if fPre is no Nondominated uerfex and DT is coNnected lhen
-remove the dundant verRxes ;
-coMect lhe vertexes in DTby conshucng lhe mum spg e;
-if DTis better than D lhen
-
-DT DT;
-
-end
-
-
-
-
-
-kemo7inC I'lhse
-
-while tll't' i ll(T (lll-llllillTt'( l'rt' do
-rmn\|' v'rtx ? in Ur nL* nt in tbLl_lit Ltith th hiht V'ILt ULl)rC'[l, brkin
-ties in tle olclest one;
-tlptÉ thÈ U%L()r' .r
-
-end
-
-
-
-
-
-DoInilhtink rhhse
-
-tabulist 0 ;
-while tlere nre tlon-dolinnted vertx do
-add a vertex u not in DT with lowest Wscore[ul/Dscore[u], bamg hes in the oldest
-
-onei
-
-tabu_list tabu_list U{u)
-update the Dscore ;
-
-end
-/ CoMertjng rhase w
-while the DT ú not connected do
-md the shortest path between the components
-add lhe vertexes along the path to the DT ;
-tabu_list tabu_list u{u};
-update the Dscore ;
-end
-
-unbl the stop critenon is not met
+    if there is no non-dominated vertex and DT is connected then
+        remove the redundant vertexes;
+        connect the vertexes in DT by constructing the minimum spanning tree;
+        if DT is better than DT' then
+            DT' <- DT;
+        end
+    end
+    /************Removing Phase**********/
+    while there is no non-dominated vertex do
+        remove a vertex v in DT and not in tabu_list with the highest value Dscore[v], breaking ties in the oldest one;
+        update the Dscore;
+    end
+    /************Dominating Phase**********/
+    tabu_list <- 0;
+    while there are non-dominated vertex do
+        add a vertex v not in DT with lowest Wscore[v]/Dscore[v], breaking ties in the oldest one;
+        tabu_list <- tabu_list ⋃{v};
+        update the Dscore;
+    end
+    /************Connecting Phase**********/
+    while DT is not connected do
+        find the shortest path between the components;
+        add the vertexes along the path to the DT;
+        tabu_list <- tabu_list ⋃{v}
+        update the Dscore;
+    end
+until the stop criterion is not met;
