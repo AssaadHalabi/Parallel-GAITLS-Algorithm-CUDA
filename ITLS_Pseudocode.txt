@@ -7,7 +7,7 @@ for each vertex v ∈ V do
         Dscore[v]<- -1 * |{u|u ∈ N[v] and u is just dominated by v}|;
     end
     else
-|       Dscore[v] <- |{u|u ∈ N[v] and is non-dominated }|;
+        Dscore[v] <- |{u|u ∈ N[v] and is non-dominated }|;
     end
 end
 
