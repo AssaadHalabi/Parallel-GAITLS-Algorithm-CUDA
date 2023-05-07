@@ -87,3 +87,32 @@ vector<int> GAITLS(Graph G, int cutoff_time, int IndiNum, double alpha) {
     // Step 4: Return the best solution
     return DT_star;
 }
+
+// added later
+// Function to check if candidate dominates individual
+bool IsDominating(const std::vector<int>& candidate, const Graph& G) {
+    int candidate_d = 0, individual_d = 0;
+    for (int i = 0; i < candidate.size(); i++) {
+        for (int j = i+1; j < candidate.size(); j++) {
+            if (G.adj_matrix[candidate[i]][candidate[j]]) {
+                candidate_d++;
+            }
+            if (G.adj_matrix[candidate[j]][candidate[i]]) {
+                individual_d++;
+            }
+        }
+    }
+    return candidate_d >= individual_d;
+}
+
+// Calculate the objective value of a candidate solution
+double Objective(const std::vector<int>& candidate, const Graph& G) {
+    double obj = 0.0;
+    for (int u = 0; u < G.size(); u++) {
+        int v = candidate[u];
+        if (G[u][v]) {
+            obj += G[u][v];
+        }
+    }
+    return obj;
+}
