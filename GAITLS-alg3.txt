@@ -1,35 +1,35 @@
-Input: me graph G(V, E, w), the cutof hme, the súe of populahon ndiNum,
-the parameter
-Output the best soluhon Dr'
-roP lnitRGL(G, lndiNm,) ;
-DT. the individual with the bt objechve in o ;
-while the elapsed time is ess fmn cNftime do
-iNde o;
-for each indiuidua in ror do
+Input: Graph G(V, E, W), cutoff time, population size IndiNum, alpha parameter
+Output: Best solution DT*
 
-O[iNdew] ms(|'ol'[indexl) ;
-if rO[indexl is better than DT' then
-OT' rO[index];
+// Step 1: Initialize the population
+POP = InitRCL(G, IndiNum, alpha)
 
+// Step 2: Set the best solution as the individual with the best objective in POP
+DT* = individual with the best objective in POP
+
+// Step 3: Start the main loop until the elapsed time is less than cutoff time
+while elapsed time is less than cutoff time do
+    index = 0
+    // Step 3.1: Apply the ITLS algorithm to each individual in POP
+    for each individual in POP do
+        POP[index] = ITLS(POP[index])
+        // Update the best solution if the current individual is better
+        if POP[index] is better than DT* then
+            DT* = POP[index]
+        end
+        index++
+    end
+    index = 0
+    // Step 3.2: Apply the MutationHD operator to each individual in POP
+    for each individual in POP do
+        POP[index] = MuatationHD(POP[index])
+        // Update the best solution if the current individual is better
+        if POP[index] is better than DT* then
+            DT* = POP[index]
+        end
+        index++
+    end
 end
-iNdew++
 
-eId
-
-index o
-
-for eQGh indiuidua in rOP do
-
-Ol>[indew] MuattionHD(O[inde] )
-
-if l'Ol'[ill(7'] i F7ttE7r tlTml DT then
-if l'Ol'[ill(7'] i F7ttE7r tlTml DT then
-
-DT' POr[indew
-
-end
-index++
-
-end
-end
-retum Dr
+// Step 4: Return the best solution
+return DT*
