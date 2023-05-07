@@ -1,0 +1,35 @@
+Input: me graph G(V, E, w), the cutof hme, the súe of populahon ndiNum,
+the parameter
+Output the best soluhon Dr'
+roP lnitRGL(G, lndiNm,) ;
+DT. the individual with the bt objechve in o ;
+while the elapsed time is ess fmn cNftime do
+iNde o;
+for each indiuidua in ror do
+
+O[iNdew] ms(|'ol'[indexl) ;
+if rO[indexl is better than DT' then
+OT' rO[index];
+
+end
+iNdew++
+
+eId
+
+index o
+
+for eQGh indiuidua in rOP do
+
+Ol>[indew] MuattionHD(O[inde] )
+
+if l'Ol'[ill(7'] i F7ttE7r tlTml DT then
+if l'Ol'[ill(7'] i F7ttE7r tlTml DT then
+
+DT' POr[indew
+
+end
+index++
+
+end
+end
+retum Dr
