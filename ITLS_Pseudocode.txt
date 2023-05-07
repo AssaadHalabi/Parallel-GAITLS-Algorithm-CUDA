@@ -1,3 +1,5 @@
+Algorithm 2: The iterated local search based on the score functions (ITLS)
+
 Input: The graph G(V, E, W), the cutoff time, the current solution DT
 Output: the local best solution DT'
 tabu_list <- 0;
