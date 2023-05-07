@@ -1,0 +1,23 @@
+function compute_Dscore(vertex, DT):
+    if vertex in DT:
+        only_dominated_by_vertex = {u | u in N(vertex) and u is only dominated by vertex}
+        Dscore = -1 * len(only_dominated_by_vertex)
+    else:
+        non_dominated_neighbors = {u | u in N(vertex) and u is non_dominated}
+        Dscore = len(non_dominated_neighbors)
+
+    return Dscore
+
+function compute_Wscore(vertex, DT):
+    if vertex not in DT:
+        min_shortest_path = float('inf')
+        
+        for v_prime in DT:
+            shortest_path = SP(vertex, v_prime)  # SP is a function that returns the shortest path between two vertices
+            
+            if shortest_path < min_shortest_path:
+                min_shortest_path = shortest_path
+
+        Wscore = min_shortest_path
+
+    return Wscore
