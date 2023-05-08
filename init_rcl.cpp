@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <vector>
 #include <unordered_set>
@@ -9,8 +8,6 @@
 #include <tuple>
 #include "graph.h"
 
-
-
 std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, double alpha)
 {
     int num_vertices = graph.getNumVertices();
@@ -18,9 +15,6 @@ std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, do
 
     // Compute the shortest path for each vertex pair
     std::vector<std::vector<double>> shortest_paths = floyd_warshall(graph);
-
-    std::mt19937 rng{std::random_device{}()};
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
 
     while (IndiNum > 0)
     {
@@ -30,7 +24,7 @@ std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, do
         std::vector<int> Dscore(num_vertices);
         for (int v = 0; v < num_vertices; ++v)
         {
-            Dscore[v] = static_cast<int>(graph.getNeighbors(v).size());
+            Dscore[v] = graph.getDegree(v);
         }
 
         while (has_non_dominated_vertices(Dscore))
@@ -57,7 +51,7 @@ std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, do
 
                 for (int v : CL)
                 {
-                    double Wuv = min_weight(graph, v);
+                    double Wuv = compute_Wscore(v, DT, shortest_paths);
                     double score = Dscore[v] / Wuv;
 
                     maxscore = std::max(maxscore, score);
@@ -66,7 +60,7 @@ std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, do
 
                 for (int v : CL)
                 {
-                    double Wuv = min_weight(graph, v);
+                    double Wuv = compute_Wscore(v, DT, shortest_paths);
                     double score = Dscore[v] / Wuv;
 
                     if (score >= minscore + alpha * (maxscore - minscore))
@@ -129,7 +123,9 @@ std::vector<std::vector<double>> floyd_warshall(const Graph &graph)
         {
             for (int j = 0; j < num_vertices; ++j)
             {
-                if (dist[i][k] != std::numeric_limits<double>::max() && dist[k][j] != std::numeric_limits<double>::max() && dist[i][k] + dist[k][j] < dist[i][j])
+                if (dist[i][k] < std::numeric_limits<double>::max() &&
+                    dist[k][j] < std::numeric_limits<double>::max() &&
+                    dist[i][k] + dist[k][j] < dist[i][j])
                 {
                     dist[i][j] = dist[i][k] + dist[k][j];
                 }
@@ -153,37 +149,18 @@ bool has_non_dominated_vertices(const std::vector<int> &Dscore)
     return false;
 }
 
-// Finds the minimum weight of edges incident to vertex v
-double min_weight(const Graph &graph, int vertex)
-{
-    double min_weight = std::numeric_limits<double>::infinity();
-    for (const auto &[v, weight] : graph.getNeighbors(vertex))
-    {
-        min_weight = std::min(min_weight, weight);
-    }
-    return min_weight;
-}
-
 // Updates the Dscore for the neighbors and 2-hop neighbors of the added vertex
 void update_Dscore(std::vector<int> &Dscore, int AddVertex, const DominatingTreeSolution &DT, const Graph &graph)
 {
-    for (const auto &[neighbor, _] : graph.getNeighbors(AddVertex))
+    for (const auto &[v, _] : graph.getNeighbors(AddVertex))
     {
-        if (DT.getDominatingVertices().find(neighbor) == DT.getDominatingVertices().end())
+        Dscore[v] = compute_Dscore(v, DT, graph);
+        for (const auto &[u, _] : graph.getNeighbors(v))
         {
-            Dscore[neighbor]--;
-
-            for (const auto &[two_hop_neighbor, _] : graph.getNeighbors(neighbor))
-            {
-                if (DT.getDominatingVertices().find(two_hop_neighbor) == DT.getDominatingVertices().end())
-                {
-                    Dscore[two_hop_neighbor]--;
-                }
-            }
+            Dscore[u] = compute_Dscore(u, DT, graph);
         }
     }
 }
-
 // Removes redundant vertices from the dominating tree
 void remove_redundant_vertices(DominatingTreeSolution &DT, const Graph &graph)
 {
@@ -215,7 +192,7 @@ void remove_redundant_vertices(DominatingTreeSolution &DT, const Graph &graph)
 }
 
 // Connects vertices in the dominating tree using Prim's algorithm to build a minimum spanning tree
-void connect_minimum_spanning_tree(DominatingTreeSolution &DT, const Graph &graph, const std::vector<std::vector<double>> &shortest_paths)
+void connect_minimum_spanning_tree(DominatingTreeSolution &DT, const Graph &graph)
 {
     std::unordered_set<int> visited;
     std::priority_queue<std::tuple<double, int, int>> edge_queue;
@@ -223,11 +200,11 @@ void connect_minimum_spanning_tree(DominatingTreeSolution &DT, const Graph &grap
     int start_vertex = *DT.getDominatingVertices().begin();
     visited.insert(start_vertex);
 
-    for (int neighbor : DT.getDominatingVertices())
+    for (const auto &[neighbor, weight] : graph.getNeighbors(start_vertex))
     {
-        if (neighbor != start_vertex)
+        if (DT.getDominatingVertices().find(neighbor) != DT.getDominatingVertices().end())
         {
-            edge_queue.push({-shortest_paths[start_vertex][neighbor], start_vertex, neighbor});
+            edge_queue.push({-weight, start_vertex, neighbor});
         }
     }
 
@@ -241,13 +218,68 @@ void connect_minimum_spanning_tree(DominatingTreeSolution &DT, const Graph &grap
             DT.addEdge(u, v, -weight);
             visited.insert(v);
 
-            for (int neighbor : DT.getDominatingVertices())
+            for (const auto &[neighbor, weight] : graph.getNeighbors(v))
             {
-                if (visited.find(neighbor) == visited.end())
+                if (DT.getDominatingVertices().find(neighbor) != DT.getDominatingVertices().end() && visited.find(neighbor) == visited.end())
                 {
-                    edge_queue.push({-shortest_paths[v][neighbor], v, neighbor});
+                    edge_queue.push({-weight, v, neighbor});
                 }
             }
         }
     }
+}
+
+int compute_Dscore(int vertex, const DominatingTreeSolution &solution, const Graph &graph)
+{
+    const auto &dominating_vertices = solution.getDominatingVertices();
+    const auto &neighbors = graph.getNeighbors(vertex);
+
+    if (dominating_vertices.find(vertex) != dominating_vertices.end())
+    {
+        std::unordered_set<int> only_dominated_by_vertex;
+        for (const auto &[u, _] : neighbors)
+        {
+            if (dominating_vertices.find(u) == dominating_vertices.end())
+            {
+                only_dominated_by_vertex.insert(u);
+            }
+        }
+        return -1 * static_cast<int>(only_dominated_by_vertex.size());
+    }
+    else
+    {
+        std::unordered_set<int> non_dominated_neighbors;
+        for (const auto &[u, _] : neighbors)
+        {
+            if (dominating_vertices.find(u) == dominating_vertices.end())
+            {
+                non_dominated_neighbors.insert(u);
+            }
+        }
+        return static_cast<int>(non_dominated_neighbors.size());
+    }
+}
+
+double compute_Wscore(int vertex, const DominatingTreeSolution &solution, const std::vector<std::vector<double>> &shortest_paths)
+{
+    const auto &dominating_vertices = solution.getDominatingVertices();
+
+    if (dominating_vertices.find(vertex) == dominating_vertices.end())
+    {
+        double min_shortest_path = std::numeric_limits<double>::infinity();
+
+        for (int v_prime : dominating_vertices)
+        {
+            double shortest_path = shortest_paths[vertex][v_prime];
+
+            if (shortest_path < min_shortest_path)
+            {
+                min_shortest_path = shortest_path;
+            }
+        }
+
+        return min_shortest_path;
+    }
+
+    return 0;
 }

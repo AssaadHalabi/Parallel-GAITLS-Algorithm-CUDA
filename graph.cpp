@@ -27,6 +27,10 @@ public:
     {
         return num_vertices_;
     }
+    int Graph::getDegree(int vertex) const
+    {
+        return adjacency_list_[vertex].size();
+    }
 
 private:
     int num_vertices_;
@@ -35,7 +39,7 @@ private:
 class DominatingTreeSolution
 {
 public:
-    DominatingTreeSolution(const Graph& graph) : graph_(graph) {}
+    DominatingTreeSolution(const Graph &graph) : graph_(graph) {}
 
     void addVertex(int vertex)
     {
@@ -59,12 +63,12 @@ public:
         total_weight_ -= weight;
     }
 
-    const std::unordered_set<int>& getDominatingVertices() const
+    const std::unordered_set<int> &getDominatingVertices() const
     {
         return dominating_vertices_;
     }
 
-    const std::vector<std::tuple<int, int, double>>& getTreeEdges() const
+    const std::vector<std::tuple<int, int, double>> &getTreeEdges() const
     {
         return tree_edges_;
     }
@@ -75,7 +79,7 @@ public:
     }
 
 private:
-    const Graph& graph_;
+    const Graph &graph_;
     std::unordered_set<int> dominating_vertices_;
     std::vector<std::tuple<int, int, double>> tree_edges_;
     double total_weight_ = 0;

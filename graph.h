@@ -15,6 +15,7 @@ public:
     void addEdge(int u, int v, double weight);
     const std::vector<std::pair<int, double>> &getNeighbors(int vertex) const;
     int getNumVertices() const;
+    int getDegree(int vertex) const;
 
 private:
     int num_vertices_;
@@ -24,18 +25,18 @@ private:
 class DominatingTreeSolution
 {
 public:
-    DominatingTreeSolution(const Graph& graph);
+    DominatingTreeSolution(const Graph &graph);
 
     void addVertex(int vertex);
     void removeVertex(int vertex);
     void addEdge(int u, int v, double weight);
     void removeEdge(int u, int v, double weight);
-    const std::unordered_set<int>& getDominatingVertices() const;
-    const std::vector<std::tuple<int, int, double>>& getTreeEdges() const;
+    const std::unordered_set<int> &getDominatingVertices() const;
+    const std::vector<std::tuple<int, int, double>> &getTreeEdges() const;
     double getTotalWeight() const;
 
 private:
-    const Graph& graph_;
+    const Graph &graph_;
     std::unordered_set<int> dominating_vertices_;
     std::vector<std::tuple<int, int, double>> tree_edges_;
     double total_weight_ = 0;
