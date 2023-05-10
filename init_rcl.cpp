@@ -95,7 +95,7 @@ std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, do
         }
 
         remove_redundant_vertices(DT, graph);
-        connect_minimum_spanning_tree(DT, graph, shortest_paths);
+        connect_minimum_spanning_tree(DT, graph);
         POPinit.push_back(DT);
         IndiNum--;
     }
