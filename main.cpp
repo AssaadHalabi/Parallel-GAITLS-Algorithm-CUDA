@@ -2,26 +2,51 @@
 #include <fstream>
 #include <sstream>
 #include "GAITLS.h"
-#include "graph.h"
-#include "ITLS.h"
-#include "init_RCL.h"
+Graph readGraphFromFile(const std::string &filename)
+{
+    std::ifstream file(filename);
+    if (!file.is_open())
+    {
+        std::cerr << "Unable to open file " << filename << std::endl;
+        // You could potentially throw an exception here or return an empty Graph
+        return Graph(0);
+    }
+
+    int numNodes, numEdges;
+    file >> numNodes >> numEdges;
+
+    // Create the graph
+    Graph graph(numNodes);
+
+    int x, y;
+    double w;
+    for (int i = 0; i < numEdges; ++i)
+    {
+        if (!(file >> x >> y >> w))
+        {
+            std::cerr << "Error reading edge data from file" << std::endl;
+            // You could potentially throw an exception here or return the partially completed Graph
+            return graph;
+        }
+        graph.addEdge(x, y, w);
+    }
+
+    file.close();
+
+    return graph;
+}
 
 int main()
 {
     // Set parameters
-    int max_iterations = 100;
+    int max_iterations = 10000;
     int cutoff_time = 5000;
     int IndiNum = 50;
-    double alpha = 0.5;
-    double mutationRate = 0.1;
+    double alpha = 0.9;
+    double mutationRate = 0.5;
 
     // Initialize the graph
-    Graph graph(5);
-    graph.addEdge(0, 1, 1.0);
-    graph.addEdge(1, 2, 2.0);
-    graph.addEdge(2, 3, 6.0);
-    graph.addEdge(4, 2, 4.0);
-    graph.addEdge(4, 5, 5.0);
+    Graph graph = readGraphFromFile("ins_500_3.txt");
 
     // Initialize the population using RCL
     std::vector<DominatingTreeSolution *> POP = init_RCL(graph, IndiNum, alpha);

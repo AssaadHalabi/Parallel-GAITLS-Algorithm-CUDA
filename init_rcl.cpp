@@ -206,7 +206,7 @@ double compute_Wscore(int vertex, const DominatingTreeSolution &solution, const 
     return 0;
 }
 
-std::vector<DominatingTreeSolution*> init_RCL(const Graph &graph, int IndiNum, double alpha)
+std::vector<DominatingTreeSolution *> init_RCL(const Graph &graph, int IndiNum, double alpha)
 {
     int num_vertices = graph.getNumVertices();
     std::vector<DominatingTreeSolution *> POPinit;
@@ -268,7 +268,16 @@ std::vector<DominatingTreeSolution*> init_RCL(const Graph &graph, int IndiNum, d
                 }
             }
 
-            int AddVertex = RCL[rand() % RCL.size()];
+            int AddVertex;
+            if (!RCL.empty())
+            {
+                AddVertex = RCL[rand() % RCL.size()];
+            }
+            else
+            {
+                std::cout << "No suitable vertex found for RCL. Returning the current population." << std::endl;
+                return POPinit;
+            }
 
             if (DT->getDominatingVertices().empty())
             {

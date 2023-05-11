@@ -36,6 +36,10 @@ DominatingTreeSolution GAITLS(const Graph &graph, int cutoff_time, int IndiNum, 
     // Step 1: Initialize the population
     std::vector<DominatingTreeSolution *> POP = init_RCL(graph, IndiNum, alpha);
 
+    if (POP.empty()) {
+    // handle the error, e.g., by throwing an exception
+    throw std::runtime_error("POP is empty.");
+}
     // Step 2: Set the best solution as the individual with the best objective in POP
     auto best_solution_it = std::min_element(POP.begin(), POP.end(),
                                              [](const DominatingTreeSolution *a, const DominatingTreeSolution *b)
