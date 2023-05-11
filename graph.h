@@ -36,9 +36,10 @@ public:
     double getTotalWeight() const;
     bool isConnected() const;
     std::vector<std::unordered_set<int>> getDisconnectedComponents() const;
-    std::vector<int> getShortestPathBetweenComponents(const std::vector<std::unordered_set<int>> &components, const std::vector<std::vector<double>> &shortest_paths) const;
+    std::vector<int> getShortestPathBetweenComponents(const std::vector<std::unordered_set<int>> &components, const std::vector<std::vector<double>> &shortest_paths, const std::vector<std::vector<int>> &next) const;
     void addVerticesAlongPath(const std::vector<int> &path);
     std::unordered_set<int> getPathVertices(const std::vector<int> &path) const;
+    bool isDominatingSet() const;
 
 private:
     const Graph &graph_;

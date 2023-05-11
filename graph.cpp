@@ -128,7 +128,7 @@ public:
         return components;
     }
 
-    std::vector<int> getShortestPathBetweenComponents(const std::vector<std::unordered_set<int>> &components, const std::vector<std::vector<double>> &shortest_paths) const
+    std::vector<int> getShortestPathBetweenComponents(const std::vector<std::unordered_set<int>> &components, const std::vector<std::vector<double>> &shortest_paths, const std::vector<std::vector<int>> &next) const
     {
         double min_weight = std::numeric_limits<double>::infinity();
         std::pair<int, int> min_weight_pair;
@@ -151,22 +151,19 @@ public:
             }
         }
 
-        // Reconstruct the shortest path from min_weight_pair using the shortest_paths matrix
+        // Reconstruct the shortest path from min_weight_pair using the next matrix
         std::vector<int> shortest_path;
         int u = min_weight_pair.first;
         int v = min_weight_pair.second;
 
+        if (next[u][v] == -1)
+        {
+            return {}; // There is no path between u and v
+        }
         while (u != v)
         {
             shortest_path.push_back(u);
-            for (int k = 0; k < static_cast<int>(shortest_paths.size()); ++k)
-            {
-                if (shortest_paths[u][k] + shortest_paths[k][v] == shortest_paths[u][v])
-                {
-                    u = k;
-                    break;
-                }
-            }
+            u = next[u][v];
         }
         shortest_path.push_back(v);
 
@@ -189,6 +186,49 @@ public:
             path_vertices.insert(vertex);
         }
         return path_vertices;
+    }
+    bool isDominatingSet() const
+    {
+        // Create a set of all vertices in the graph
+        std::unordered_set<int> allVertices;
+        for (int i = 0; i < graph_.getNumVertices(); ++i)
+        {
+            allVertices.insert(i);
+        }
+
+        // Remove all dominating vertices from the set
+        for (const int vertex : dominating_vertices_)
+        {
+            allVertices.erase(vertex);
+        }
+
+        // Check each remaining vertex
+        for (const int vertex : allVertices)
+        {
+            bool isDominated = false;
+
+            // Get all neighbors of the current vertex
+            const std::vector<std::pair<int, double>> &neighbors = graph_.getNeighbors(vertex);
+
+            // If one of the neighbors is in the dominating set, this vertex is dominated
+            for (const std::pair<int, double> &neighbor : neighbors)
+            {
+                if (dominating_vertices_.count(neighbor.first))
+                {
+                    isDominated = true;
+                    break;
+                }
+            }
+
+            // If the vertex is not dominated, return false
+            if (!isDominated)
+            {
+                return false;
+            }
+        }
+
+        // If all vertices are dominated, return true
+        return true;
     }
 
 private:

@@ -11,8 +11,9 @@
 #include <tuple>
 #include "graph.h"
 
-std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, double alpha);
-std::vector<std::vector<double>> floyd_warshall(const Graph &graph);
+std::vector<std::unique_ptr<DominatingTreeSolution>> init_RCL(const Graph &graph, int IndiNum, double alpha);
+std::pair<std::vector<std::vector<double>>, std::vector<std::vector<int>>> floyd_warshall(const Graph &graph);
+std::vector<int> getPath(int u, int v, const std::vector<std::vector<int>> &next);
 bool has_non_dominated_vertices(const std::vector<int> &Dscore);
 void update_Dscore(std::vector<int> &Dscore, int AddVertex, const DominatingTreeSolution &DT, const Graph &graph);
 void remove_redundant_vertices(DominatingTreeSolution &DT, const Graph &graph);

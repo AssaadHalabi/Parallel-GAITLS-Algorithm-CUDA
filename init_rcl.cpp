@@ -4,17 +4,18 @@
 #include <algorithm>
 #include <limits>
 #include <random>
+#include <memory>
 #include <queue>
 #include <tuple>
 #include "graph.h"
 
-std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, double alpha)
+std::vector<std::unique_ptr<DominatingTreeSolution>> init_RCL(const Graph &graph, int IndiNum, double alpha)
 {
     int num_vertices = graph.getNumVertices();
-    std::vector<DominatingTreeSolution> POPinit;
+    std::vector<std::unique_ptr<DominatingTreeSolution>> POPinit;
 
-    // Compute the shortest path for each vertex pair
-    std::vector<std::vector<double>> shortest_paths = floyd_warshall(graph);
+    // Compute the shortest path and predecessor for each vertex pair
+    auto [shortest_paths, predecessors] = floyd_warshall(graph);
 
     while (IndiNum > 0)
     {
@@ -96,17 +97,18 @@ std::vector<DominatingTreeSolution> init_RCL(const Graph &graph, int IndiNum, do
 
         remove_redundant_vertices(DT, graph);
         connect_minimum_spanning_tree(DT, graph);
-        POPinit.push_back(DT);
+        POPinit.push_back(std::make_unique<DominatingTreeSolution>(DT));
         IndiNum--;
     }
 
     return POPinit;
 }
 
-std::vector<std::vector<double>> floyd_warshall(const Graph &graph)
+std::pair<std::vector<std::vector<double>>, std::vector<std::vector<int>>> floyd_warshall(const Graph &graph)
 {
     int num_vertices = graph.getNumVertices();
     std::vector<std::vector<double>> dist(num_vertices, std::vector<double>(num_vertices, std::numeric_limits<double>::max()));
+    std::vector<std::vector<int>> next(num_vertices, std::vector<int>(num_vertices, -1));
 
     for (int i = 0; i < num_vertices; ++i)
     {
@@ -114,6 +116,7 @@ std::vector<std::vector<double>> floyd_warshall(const Graph &graph)
         for (const auto &[neighbor, weight] : graph.getNeighbors(i))
         {
             dist[i][neighbor] = weight;
+            next[i][neighbor] = neighbor;
         }
     }
 
@@ -128,12 +131,27 @@ std::vector<std::vector<double>> floyd_warshall(const Graph &graph)
                     dist[i][k] + dist[k][j] < dist[i][j])
                 {
                     dist[i][j] = dist[i][k] + dist[k][j];
+                    next[i][j] = next[i][k];
                 }
             }
         }
     }
 
-    return dist;
+    return {dist, next};
+}
+std::vector<int> getPath(int u, int v, const std::vector<std::vector<int>> &next)
+{
+    if (next[u][v] == -1)
+    {
+        return {}; // There is no path between u and v
+    }
+    std::vector<int> path = {u};
+    while (u != v)
+    {
+        u = next[u][v];
+        path.push_back(u);
+    }
+    return path;
 }
 
 // Checks if there are non-dominated vertices in the graph
