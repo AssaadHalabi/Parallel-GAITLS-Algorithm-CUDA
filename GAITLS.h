@@ -1,12 +1,9 @@
 #ifndef GAITLS_H
 #define GAITLS_H
 
-#include "graph.h"
-#include "init_rcl.h"
 #include "ITLS.h"
 #include <vector>
 #include <unordered_set>
-#include <memory>
 #include <algorithm>
 #include <ctime>
 

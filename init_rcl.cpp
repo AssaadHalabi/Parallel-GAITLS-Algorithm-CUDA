@@ -4,105 +4,10 @@
 #include <algorithm>
 #include <limits>
 #include <random>
-#include <memory>
 #include <queue>
 #include <tuple>
+#include "init_RCL.h"
 #include "graph.h"
-
-std::vector<std::unique_ptr<DominatingTreeSolution>> init_RCL(const Graph &graph, int IndiNum, double alpha)
-{
-    int num_vertices = graph.getNumVertices();
-    std::vector<std::unique_ptr<DominatingTreeSolution>> POPinit;
-
-    // Compute the shortest path and predecessor for each vertex pair
-    auto [shortest_paths, predecessors] = floyd_warshall(graph);
-
-    while (IndiNum > 0)
-    {
-        DominatingTreeSolution DT(graph);
-        std::unordered_set<int> CL;
-
-        std::vector<int> Dscore(num_vertices);
-        for (int v = 0; v < num_vertices; ++v)
-        {
-            Dscore[v] = graph.getDegree(v);
-        }
-
-        while (has_non_dominated_vertices(Dscore))
-        {
-            std::vector<int> RCL;
-
-            if (DT.getDominatingVertices().empty())
-            {
-                int maxscore = *std::max_element(Dscore.begin(), Dscore.end());
-                int minscore = *std::min_element(Dscore.begin(), Dscore.end());
-
-                for (int v = 0; v < num_vertices; ++v)
-                {
-                    if (Dscore[v] >= minscore + alpha * (maxscore - minscore))
-                    {
-                        RCL.push_back(v);
-                    }
-                }
-            }
-            else
-            {
-                double maxscore = -std::numeric_limits<double>::infinity();
-                double minscore = std::numeric_limits<double>::infinity();
-
-                for (int v : CL)
-                {
-                    double Wuv = compute_Wscore(v, DT, shortest_paths);
-                    double score = Dscore[v] / Wuv;
-
-                    maxscore = std::max(maxscore, score);
-                    minscore = std::min(minscore, score);
-                }
-
-                for (int v : CL)
-                {
-                    double Wuv = compute_Wscore(v, DT, shortest_paths);
-                    double score = Dscore[v] / Wuv;
-
-                    if (score >= minscore + alpha * (maxscore - minscore))
-                    {
-                        RCL.push_back(v);
-                    }
-                }
-            }
-
-            int AddVertex = RCL[rand() % RCL.size()];
-
-            if (DT.getDominatingVertices().empty())
-            {
-                for (const auto &[v, _] : graph.getNeighbors(AddVertex))
-                {
-                    CL.insert(v);
-                }
-            }
-            else
-            {
-                for (const auto &[v, _] : graph.getNeighbors(AddVertex))
-                {
-                    if (DT.getDominatingVertices().find(v) == DT.getDominatingVertices().end())
-                    {
-                        CL.insert(v);
-                    }
-                }
-            }
-
-            DT.addVertex(AddVertex);
-            update_Dscore(Dscore, AddVertex, DT, graph);
-        }
-
-        remove_redundant_vertices(DT, graph);
-        connect_minimum_spanning_tree(DT, graph);
-        POPinit.push_back(std::make_unique<DominatingTreeSolution>(DT));
-        IndiNum--;
-    }
-
-    return POPinit;
-}
 
 std::pair<std::vector<std::vector<double>>, std::vector<std::vector<int>>> floyd_warshall(const Graph &graph)
 {
@@ -165,6 +70,36 @@ bool has_non_dominated_vertices(const std::vector<int> &Dscore)
         }
     }
     return false;
+}
+int compute_Dscore(int vertex, const DominatingTreeSolution &solution, const Graph &graph)
+{
+    const auto &dominating_vertices = solution.getDominatingVertices();
+    const auto &neighbors = graph.getNeighbors(vertex);
+
+    if (dominating_vertices.find(vertex) != dominating_vertices.end())
+    {
+        std::unordered_set<int> only_dominated_by_vertex;
+        for (const auto &[u, _] : neighbors)
+        {
+            if (dominating_vertices.find(u) == dominating_vertices.end())
+            {
+                only_dominated_by_vertex.insert(u);
+            }
+        }
+        return -1 * static_cast<int>(only_dominated_by_vertex.size());
+    }
+    else
+    {
+        std::unordered_set<int> non_dominated_neighbors;
+        for (const auto &[u, _] : neighbors)
+        {
+            if (dominating_vertices.find(u) == dominating_vertices.end())
+            {
+                non_dominated_neighbors.insert(u);
+            }
+        }
+        return static_cast<int>(non_dominated_neighbors.size());
+    }
 }
 
 // Updates the Dscore for the neighbors and 2-hop neighbors of the added vertex
@@ -247,37 +182,6 @@ void connect_minimum_spanning_tree(DominatingTreeSolution &DT, const Graph &grap
     }
 }
 
-int compute_Dscore(int vertex, const DominatingTreeSolution &solution, const Graph &graph)
-{
-    const auto &dominating_vertices = solution.getDominatingVertices();
-    const auto &neighbors = graph.getNeighbors(vertex);
-
-    if (dominating_vertices.find(vertex) != dominating_vertices.end())
-    {
-        std::unordered_set<int> only_dominated_by_vertex;
-        for (const auto &[u, _] : neighbors)
-        {
-            if (dominating_vertices.find(u) == dominating_vertices.end())
-            {
-                only_dominated_by_vertex.insert(u);
-            }
-        }
-        return -1 * static_cast<int>(only_dominated_by_vertex.size());
-    }
-    else
-    {
-        std::unordered_set<int> non_dominated_neighbors;
-        for (const auto &[u, _] : neighbors)
-        {
-            if (dominating_vertices.find(u) == dominating_vertices.end())
-            {
-                non_dominated_neighbors.insert(u);
-            }
-        }
-        return static_cast<int>(non_dominated_neighbors.size());
-    }
-}
-
 double compute_Wscore(int vertex, const DominatingTreeSolution &solution, const std::vector<std::vector<double>> &shortest_paths)
 {
     const auto &dominating_vertices = solution.getDominatingVertices();
@@ -300,4 +204,99 @@ double compute_Wscore(int vertex, const DominatingTreeSolution &solution, const 
     }
 
     return 0;
+}
+
+std::vector<DominatingTreeSolution*> init_RCL(const Graph &graph, int IndiNum, double alpha)
+{
+    int num_vertices = graph.getNumVertices();
+    std::vector<DominatingTreeSolution *> POPinit;
+
+    // Compute the shortest path and predecessor for each vertex pair
+    auto [shortest_paths, predecessors] = floyd_warshall(graph);
+
+    while (IndiNum > 0)
+    {
+        DominatingTreeSolution *DT = new DominatingTreeSolution(graph);
+        std::unordered_set<int> CL;
+
+        std::vector<int> Dscore(num_vertices);
+        for (int v = 0; v < num_vertices; ++v)
+        {
+            Dscore[v] = graph.getDegree(v);
+        }
+
+        while (has_non_dominated_vertices(Dscore))
+        {
+            std::vector<int> RCL;
+
+            if (DT->getDominatingVertices().empty())
+            {
+                int maxscore = *std::max_element(Dscore.begin(), Dscore.end());
+                int minscore = *std::min_element(Dscore.begin(), Dscore.end());
+
+                for (int v = 0; v < num_vertices; ++v)
+                {
+                    if (Dscore[v] >= minscore + alpha * (maxscore - minscore))
+                    {
+                        RCL.push_back(v);
+                    }
+                }
+            }
+            else
+            {
+                double maxscore = -std::numeric_limits<double>::infinity();
+                double minscore = std::numeric_limits<double>::infinity();
+
+                for (int v : CL)
+                {
+                    double Wuv = compute_Wscore(v, *DT, shortest_paths);
+                    double score = Dscore[v] / Wuv;
+
+                    maxscore = std::max(maxscore, score);
+                    minscore = std::min(minscore, score);
+                }
+
+                for (int v : CL)
+                {
+                    double Wuv = compute_Wscore(v, *DT, shortest_paths);
+                    double score = Dscore[v] / Wuv;
+
+                    if (score >= minscore + alpha * (maxscore - minscore))
+                    {
+                        RCL.push_back(v);
+                    }
+                }
+            }
+
+            int AddVertex = RCL[rand() % RCL.size()];
+
+            if (DT->getDominatingVertices().empty())
+            {
+                for (const auto &[v, _] : graph.getNeighbors(AddVertex))
+                {
+                    CL.insert(v);
+                }
+            }
+            else
+            {
+                for (const auto &[v, _] : graph.getNeighbors(AddVertex))
+                {
+                    if (DT->getDominatingVertices().find(v) == DT->getDominatingVertices().end())
+                    {
+                        CL.insert(v);
+                    }
+                }
+            }
+
+            DT->addVertex(AddVertex);
+            update_Dscore(Dscore, AddVertex, *DT, graph);
+        }
+
+        remove_redundant_vertices(*DT, graph);
+        connect_minimum_spanning_tree(*DT, graph);
+        POPinit.push_back(DT);
+        IndiNum--;
+    }
+
+    return POPinit;
 }

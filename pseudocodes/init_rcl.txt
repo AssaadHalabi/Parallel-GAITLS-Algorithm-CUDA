@@ -1,0 +1,63 @@
+function init_RCL(graph, alpha):
+    Input: A graph G(V, E, W), the size of population IndiNum, the parameter alpha
+    Output: The population POPinit
+
+    Initialize POPinit to an empty set:
+    POPinit = Ø
+
+    Compute the shortest path for each vertex pair
+
+    while IndiNum > 0 do
+        Initialize DT and CL to empty sets:
+        DT = Ø
+        CL = Ø
+
+        for each vertex v do
+            Dscore[v] = |N[v]|
+        end
+
+        while there are non-dominated vertices do
+            Initialize RCL to an empty set:
+            RCL = Ø
+
+            if DT is empty then
+                maxscore = max(Dscore[v] for v in V)
+                minscore = min(Dscore[v] for v in V)
+
+                for each vertex v in V do
+                    if Dscore[v] >= minscore + alpha * (maxscore - minscore) then
+                        RCL = RCL ∪ {v}
+                    end
+                end
+            else
+                maxscore = max(Dscore[v] / min(Wuv) for v in CL)
+                minscore = min(Dscore[v] / min(Wuv) for v in CL)
+
+                for each vertex v in CL do
+                    if Dscore[v] >= minscore + alpha * (maxscore - minscore) then
+                        RCL = RCL ∪ {v}
+                    end
+                end
+            end
+
+            AddVertex = randomly select from the RCL
+
+            if DT is empty then
+                CL = N(AddVertex)
+            else
+                CL = CL ∪ {v | v ∈ N(AddVertex) and v ∉ DT}
+            end
+
+            DT = DT ∪ {AddVertex}
+            Update the Dscore for N[AddVertex] and N2(AddVertex)
+
+        end
+
+        Remove the redundant vertices
+        Connect the vertices in DT by constructing a minimum spanning tree on them
+        POPinit = POPinit ∪ {DT}
+        IndiNum = IndiNum - 1
+
+    end
+
+    return POPinit

@@ -5,14 +5,11 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <queue>
-#include <memory>
 #include <limits>
 #include <algorithm>
 #include <ctime>
 #include "init_RCL.h"
 
-class Graph;                  // Forward declaration
-class DominatingTreeSolution; // Forward declaration
 
 int compute_Dscore(int v, const DominatingTreeSolution &DT, const Graph &graph);
 bool has_non_dominated_vertices(const std::vector<int> &Dscore);
