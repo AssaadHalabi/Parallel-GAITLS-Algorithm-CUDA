@@ -107,15 +107,27 @@ Graph Input:
 In the main function, the graph is input. The number of nodes (n) and edges (m) are read from standard input. Then, for each edge, the two nodes that it connects (u and v) are read, and they are each added to the other's adjacency list (adj[u] and adj[v]). This means the graph is treated as an undirected graph. If you want to treat it as a directed graph, you would remove the line that adds u to adj[v].
 
 Greedy Dominating Set Calculation:
-The function greedy_dominating_set is called with the adjacency list as an argument. This function first calculates the "cover size" of each node (i.e., the number of nodes it is connected to plus one) and then selects nodes to be in the dominating set. It always selects the node with the largest cover size that is not already in the dominating set. After a node is added to the dominating set, all of its neighbors are marked as "dominated" and their cover sizes are reduced by one for each of their neighbors that is not in the dominating set. This process repeats until no more nodes can be added to the dominating set.
+The function greedy_dominating_set is called with the adjacency list as an argument. 
+This function first calculates the "cover size" of each node (i.e., the number of nodes it is 
+connected to plus one) and then selects nodes to be in the dominating set. It always selects the 
+node with the largest cover size that is not already in the dominating set. After a node is added 
+to the dominating set, all of its neighbors are marked as "dominated" and their cover sizes are 
+reduced by one for each of their neighbors that is not in the dominating set. This process repeats 
+until no more nodes can be added to the dominating set.
 
 Parallel Cover Size Calculation:
-The cover size calculation is performed in parallel using CUDA. The computeCover kernel is launched with one thread for each node in the graph. Each thread calculates the cover size for one node and stores it in shared memory. Then, the first thread in each block sums up the cover sizes for all threads in the block and stores the result in the cover array on the device.
+The cover size calculation is performed in parallel using CUDA. The computeCover kernel is launched 
+with one thread for each node in the graph. Each thread calculates the cover size for one node and 
+stores it in shared memory. Then, the first thread in each block sums up the cover sizes for all 
+threads in the block and stores the result in the cover array on the device.
 
 Result Output:
-After the dominating set has been calculated, it is printed to standard output. Each node in the set is printed followed by a space.
+After the dominating set has been calculated, it is printed to standard output. Each node in the set
+is printed followed by a space.
 
-So, this code is basically a GPU-accelerated version of a greedy algorithm for finding a dominating set in a graph. It takes advantage of the fact that the cover size calculation can be performed independently for each node, which makes it a good candidate for parallel processing.
+So, this code is basically a GPU-accelerated version of a greedy algorithm for finding a dominating 
+set in a graph. It takes advantage of the fact that the cover size calculation can be performed 
+independently for each node, which makes it a good candidate for parallel processing.
 
 
 
