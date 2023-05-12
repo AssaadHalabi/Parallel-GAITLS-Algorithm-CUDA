@@ -1,0 +1,58 @@
+__global__ void init_population(Population *pop, Graph *graph, int pop_size, float alpha) {
+    // Each thread handles initialization of one individual in the population
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < pop_size) {
+        // Call the initialization procedure here
+        Init_RCL(graph, &(pop[id]), alpha);
+    }
+}
+
+__global__ void apply_ITLS(Population *pop, Graph *graph, int pop_size) {
+    // Each thread handles one individual in the population
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < pop_size) {
+        // Call the Iterated Local Search procedure here
+        ITLS(graph, &(pop[id]));
+    }
+}
+
+__global__ void apply_mutation(Population *pop, Graph *graph, int pop_size) {
+    // Each thread handles one individual in the population
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < pop_size) {
+        // Call the mutation procedure here
+        Mutation(&(pop[id]));
+    }
+}
+
+int main() {
+    // Initialization
+    int pop_size = ...;
+    float alpha = ...;
+    Graph graph = ...;
+
+    // Allocate memory on the GPU for the population
+    Population *d_pop;
+    cudaMalloc(&d_pop, pop_size * sizeof(Population));
+
+    // Initialize population
+    init_population<<<pop_size/256+1, 256>>>(d_pop, &graph, pop_size, alpha);
+    cudaDeviceSynchronize();
+
+    // Iterations
+    while (/* not reached cut-off time */) {
+        // Apply Iterated Local Search
+        apply_ITLS<<<pop_size/256+1, 256>>>(d_pop, &graph, pop_size);
+        cudaDeviceSynchronize();
+
+        // Apply mutation
+        apply_mutation<<<pop_size/256+1, 256>>>(d_pop, &graph, pop_size);
+        cudaDeviceSynchronize();
+
+        // Update best solution, this can be done on the host side
+        //...
+    }
+
+    cudaFree(d_pop);
+    return 0;
+}
