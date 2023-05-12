@@ -1,0 +1,99 @@
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <iostream>
+#include <vector>
+#include <set>
+
+using namespace std;
+
+__global__ void computeCover(int *cover, int *adj_sizes, int n) {
+    extern __shared__ int shared_cover[];
+    int i = threadIdx.x + blockDim.x * blockIdx.x;
+    if(i < n) {
+        shared_cover[threadIdx.x] = adj_sizes[i] + 1;
+        __syncthreads();
+
+        if(threadIdx.x == 0) {
+            for(int j = 1; j < blockDim.x; ++j)
+                shared_cover[0] += shared_cover[j];
+            cover[blockIdx.x] = shared_cover[0];
+        }
+    }
+}
+
+vector<vector<int>> adj; // adjacency list representation of the graph
+
+set<int> greedy_dominating_set(const vector<vector<int>>& g) {
+    int n = g.size();
+    vector<bool> in_dominating_set(n, false), dominated(n, false);
+    vector<int> cover(n, 0);
+    set<int> dominating_set;
+    
+    // Pre-compute cover size
+    vector<int> adj_sizes(n, 0);
+    for (int i = 0; i < n; i++) {
+        adj_sizes[i] = g[i].size();
+    }
+
+    int *dev_cover, *dev_adj_sizes;
+
+    cudaMalloc((void**)&dev_cover, n * sizeof(int));
+    cudaMalloc((void**)&dev_adj_sizes, n * sizeof(int));
+
+    cudaMemcpy(dev_cover, cover.data(), n * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_adj_sizes, adj_sizes.data(), n * sizeof(int), cudaMemcpyHostToDevice);
+
+    int blockSize = 256;
+    int numBlocks = (n + blockSize - 1) / blockSize;
+    computeCover<<<numBlocks, blockSize, blockSize * sizeof(int)>>>(dev_cover, dev_adj_sizes, n);
+
+    cudaMemcpy(cover.data(), dev_cover, n * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(dev_cover);
+    cudaFree(dev_adj_sizes);
+
+    // Select nodes for the dominating set
+    while(true) {
+        int max_cover = -1, max_node = -1;
+        for(int i = 0; i < n; ++i) {
+            if(!in_dominating_set[i] && cover[i] > max_cover) {
+                max_cover = cover[i];
+                max_node = i;
+            }
+        }
+        if(max_node == -1) break;
+        in_dominating_set[max_node] = true;
+        dominating_set.insert(max_node);
+        for(int v : g[max_node]) {
+            if(!dominated[v]) {
+                dominated[v] = true;
+                for(int u : g[v]) {
+                    if(!in_dominating_set[u]) --cover[u];
+                }
+            }
+        }
+    }
+
+    return dominating_set;
+}
+
+int main() {
+    // Input the graph
+    int n, m; // number of nodes, number of edges
+    cin >> n >> m;
+    adj.resize(n);
+    for (int i = 0; i < m; i++) {
+               int u, v;
+        cin >> u >> v; // edge between nodes u and v
+        adj[u].push_back(v);
+        adj[v].push_back(u); // remove this for directed graphs
+    }
+
+    set<int> d_set = greedy_dominating_set(adj);
+
+    // Print the dominating set
+    for (int node : d_set) cout << node << ' ';
+    cout << '\n';
+
+    return 0;
+}
