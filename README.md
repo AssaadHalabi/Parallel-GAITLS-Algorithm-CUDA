@@ -1,1 +1,1 @@
-# Parallel-GAITLS-Algorithm-CUDA
+# Parallel-Greedy-MPIDS-Algorithm-CUDA
