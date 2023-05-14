@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 #include "mgraph.h"
 
+
 __device__ int mceil(int x)
 {
     int a, b;
