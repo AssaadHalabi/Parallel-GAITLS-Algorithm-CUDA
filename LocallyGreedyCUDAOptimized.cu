@@ -8,7 +8,19 @@
 #include <thrust/sort.h>
 #include <thrust/copy.h>
 #include <cuda_runtime.h>
+#include <cuda_runtime.h>
+#include <stdio.h>
 #include "mgraph.h"
+
+#define cudaCheckError(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort = true)
+{
+    if (code != cudaSuccess)
+    {
+        fprintf(stderr, "CUDA Error: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort) exit(code);
+    }
+}
 
 __device__ int mceil(int x)
 {
@@ -30,7 +42,7 @@ struct mycmp1
         return a.degree < b.degree;
     }
 };
-__global__ void init_arrays(int *Delta, int *unsat, int *fixThre, int g_MAX_INDEX_OF_NODE, Edge *V, int *sumnd)
+__global__ void init_arrays(int *Delta, int *unsat, int *fixThre, int g_MAX_INDEX_OF_NODE, Vertex *V, int *sumnd)
 {
     __shared__ int shared_Delta[256];
     __shared__ int shared_unsat[256];
@@ -68,7 +80,7 @@ __global__ void init_arrays(int *Delta, int *unsat, int *fixThre, int g_MAX_INDE
     }
 }
 
-__global__ void update_values(int *Delta, int *unsat, Edge *V, int u)
+__global__ void update_values(int *Delta, int *unsat, Vertex *V, int u)
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -188,7 +200,8 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
         thrust::raw_pointer_cast(d_fixThre.data()),
         g.MAX_INDEX_OF_NODE, g.V,
         thrust::raw_pointer_cast(d_sumnd.data()));
-    cudaCheckError();
+    cudaError_t err1 = cudaGetLastError(); // get the last error that occurred
+    cudaCheckError(err1);
 
     // Ensure all GPU computations are finished before proceeding
     cudaDeviceSynchronize();
@@ -200,7 +213,6 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
     sumnd = d_sumnd[0];
 
     // sort the nodes by degree in ascending order
-    thrust::device_vector<mynode> d_T = h_T;
     thrust::sort(d_T.begin(), d_T.end(), mycmp1());
     thrust::copy(d_T.begin(), d_T.end(), h_T.begin());
 
@@ -256,7 +268,8 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
                     nid.size(),
                     thrust::raw_pointer_cast(d_max_unsat.data()),
                     thrust::raw_pointer_cast(d_u.data()));
-                cudaCheckError();
+                cudaError_t err2 = cudaGetLastError(); // get the last error that occurred
+                cudaCheckError(err2);
 
                 // Copy result back to host
                 int u = d_u[0];
@@ -269,7 +282,8 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
                     thrust::raw_pointer_cast(d_unsat.data()),
                     g.V,
                     u);
-                cudaCheckError();
+                cudaError_t err3 = cudaGetLastError(); // get the last error that occurred
+                cudaCheckError(err3);
                 // remove the selected node u from the candidators set
                 nid.erase(u);
             }
