@@ -1,15 +1,16 @@
 #include <iostream>
-#include "iomanip"
-#include "vector"
-#include "set"
-#include "cstring"
+#include <iomanip>
+#include <vector>
+#include <set>
+#include <cstring>
 #include <fstream>
 #include <cassert>
-#include "ctime"
+#include <ctime>
 
 #include "LocallyGreedy.h"
 
 using namespace std;
+
 
 //return a string vector, which is obtained by splitting the original string s according to the separator sep
 std::vector<std::string> split(const std::string &s, const std::string &sep) {
@@ -82,13 +83,13 @@ int main() {
     double d1, d2, d3;
 
     //some basic information about the datasets
-    string datasets[4] = {"karate", "dolphins", "football", "jazz"};
-    int n[4] = {34, 62, 115, 198};//the number of nodes in corresponding graphs
-    int e[4] = {78, 159, 613, 2742};//the number of edges in corresponding graphs
-    int mid[4] = {40, 70, 120, 200};//the maximum node ID in corresponding graphs
+    string datasets[2] = {"socfb-nips-ego", "CollegeMsg"};
+    int n[4] = {2888, 1899};//the number of nodes in corresponding graphs
+    int e[4] = {2981, 59835};//the number of edges in corresponding graphs
+    int mid[4] = {2889, 1900};//the maximum node ID in corresponding graphs
 
     string ofile =
-            "C:\\Users\\ASUS\\Desktop\\PIDS\\outfile\\test.txt";//the path of the output file
+            "C:/University Material/Graph/Project/Parallel-Greedy-MPIDS-Algorithm-CUDA/test.txt";//the path of the output file
     ofstream outfile;
     outfile.open(ofile, std::ios::out | std::ios::app);
     assert(outfile.is_open());
@@ -96,7 +97,7 @@ int main() {
     int gsize = 0, wsize = 0;
     double rprate = 0;
 
-    for (int testID = 0; testID < 4; testID++) {
+    for (int testID = 0; testID < 2; testID++) {
         cout << "\t" << testID << endl;
 
         t0 = clock();
@@ -110,10 +111,11 @@ int main() {
 
         t0 = clock();
         //the path of input file
-        string file = "C:\\Users\\ASUS\\Desktop\\PIDS\\inputfile\\";
+        string file = "C:/University Material/Graph/Project/Parallel-Greedy-MPIDS-Algorithm-CUDA/";
         file += datasets[testID] + ".txt";
 
         loadFile(file, G0, gsize);
+        std::cout << "AFTER LOADFILE" << std::endl;
         t1 = clock();
         d2 = double(t1 - t0) / CLK_TCK;
         mtmp += "\t(2/3) Time for loading mGraph data: " + to_string(d2) + " s\n";
