@@ -67,6 +67,7 @@ __global__ void init_arrays(int *Delta, int *unsat, int *fixThre, int g_MAX_INDE
             shared_fixThre[threadIdx.x] = db;
             shared_unsat[threadIdx.x] = da;
             atomicAdd(sumnd, db);
+            
         }
     }
 
@@ -222,8 +223,7 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
 
     // res: the (partial) PIDS, which will be inserted with a number of nodes one by one  as the procedure runs and becomes a valid PIDS in the end
     set<int> res;
-    set<int>::iterator sp2;
-    set<int>::iterator ep2;
+    
 
     // based on the order computed before, check every node one by one to confirm whether current node is satisfied or not
     // if the current node v is satisfied, then skip the following processing to the check towards the next node
@@ -290,12 +290,13 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
             nid.clear();
         }
     }
-
-    spointer = res.begin();
-    epointer = res.end();
-    for (; spointer != epointer; spointer++)
+    set<int>::iterator sp2;
+    set<int>::iterator ep2;
+    sp2 = res.begin();
+    ep2 = res.end();
+    for (; sp2 != ep2; sp2++)
     {
-        x.push_back(*spointer);
+        x.push_back(*sp2);
     }
     // stop timer
     cudaEventRecord(stop);
@@ -315,13 +316,13 @@ int LocallyGreedyCUDAOptimized(std::vector<int> &x, const mGraph &g, double &tle
     // naV: the number of the current node's positive neighbors
     int naV;
     aprate = 0;
-    spointer = s.begin();
-    epointer = s.end();
-    id = *spointer;
-    for (; spointer != epointer; spointer++)
+    sp2 = s.begin();
+    ep2 = s.end();
+    id = *sp2;
+    for (; sp2 != ep2; sp2++)
     {
-        id = *spointer;
-        naV = fixThre[*spointer] - Delta[*spointer];
+        id = *sp2;
+        naV = fixThre[*sp2] - Delta[*sp2];
         aprate += 1.00 * naV / g.V[id].neighNum;
         if (naV < g.V[id].neighNum / 2)
         {

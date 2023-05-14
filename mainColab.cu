@@ -97,7 +97,7 @@ int main()
     int mid[4] = {2889, 1900, 82168, 75889};  // the maximum node ID in corresponding graphs
 
     string ofile =
-        "C:/University Material/Graph/Project/Parallel-Greedy-MPIDS-Algorithm-CUDA/test.txt"; // the path of the output file
+        "/content/test.txt"; // the path of the output file
     ofstream outfile;
     outfile.open(ofile, std::ios::out | std::ios::app);
     assert(outfile.is_open());
@@ -120,7 +120,7 @@ int main()
 
         t0 = clock();
         // the path of input file
-        string file = "C:/University Material/Graph/Project/Parallel-Greedy-MPIDS-Algorithm-CUDA/";
+        string file = "/content/";
         file += datasets[testID] + ".txt";
 
         loadFile(file, G0, gsize);

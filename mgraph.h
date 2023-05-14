@@ -1,3 +1,5 @@
+#ifndef M_GRAPH
+#define M_GRAPH
 #include <cstddef>
 
 struct Edge {
@@ -118,3 +120,6 @@ public:
         return;
     }
 };
+
+
+#endif // M_GRAPH
