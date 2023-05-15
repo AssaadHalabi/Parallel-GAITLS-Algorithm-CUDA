@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cassert>
 #include <ctime>
+#include "timer.h"
 #include <cuda_runtime.h>
 #include "mgraph.h"
 #include "LocallyGreedySequential.h"
@@ -91,12 +92,13 @@ int main()
     const int LOOP = 20;
     clock_t t0, t1;
     double d1, d2, d3;
+    Timer timer;
 
     // some basic information about the datasets
     string datasets[4] = {"socfb-nips-ego", "CollegeMsg", "Slashdot0902", "soc-Epinions1"};
     int n[4] = {2888, 1899, 82168, 75888};    // the number of nodes in corresponding graphs
     int e[4] = {2981, 59835, 877286, 811480}; // the number of edges in corresponding graphs
-    int mid[4] = {2889, 1900, 82168, 75889};  // the maximum node ID in corresponding graphs
+    int mid[4] = {2889, 1900, 82169, 75889};  // the maximum node ID in corresponding graphs
 
     string ofile =
         "/content/test.txt"; // the path of the output file
@@ -139,30 +141,20 @@ int main()
         // savg: accumulate the size of the output results
         // snow: the size of the output result in current turn
         int sbest = n[testID], sworst = 0, savg = 0, snow;
-        for (int i = 0; i < LOOP; i++)
-        {
-            cout << "LOOP " << i + 1 << endl;
-            vector<int> w;
-            d2 = 0;
-            LocallyGreedy(w, G0, d2, rprate);
-            trun += d2;
+        vector<int> w;
+        d2 = 0;
+        startTime(&timer);
+        LocallyGreedy(w, G0, d2, rprate);
+        stopTime(&timer);
 
-            snow = w.size();
-            savg += snow;
-
-            if (sbest > snow)
-                sbest = snow;
-            if (sworst < snow)
-                sworst = snow;
-        }
-        trun = trun / LOOP;
-        wsize = savg / LOOP;
+        snow = w.size();
+        printElapsedTime(timer, "    CPU time", CYAN);
 
         mtmp += "\t(3/6) SEQUENTIAL Time for find PIDS: " + to_string(trun) + " s\n";
-        mtmp += "\t|P|: \tBEST= " + to_string(sbest) +
-                ", WORST= " + to_string(sworst) +
-                ", AVG= " + to_string(wsize) + "\n";
-        mtmp += "\t(|P|/|V|)*100%=\t" + to_string(1.00 * wsize / gsize * 100) + "\n";
+        mtmp += "\t|P|: \tBEST= " + to_string(snow) +
+                ", WORST= " + to_string(snow) +
+                ", AVG= " + to_string(snow) + "\n";
+        mtmp += "\t(|P|/|V|)*100%=\t" + to_string(1.00 * snow / gsize * 100) + "\n";
         mtmp += "\tAverage positive rate=\t" + to_string(rprate) + "\n";
 
         mcontext = mtmp;
@@ -181,30 +173,26 @@ int main()
         // savg: accumulate the size of the output results
         // snow: the size of the output result in current turn
         sbest = n[testID], sworst = 0, savg = 0;
-        for (int i = 0; i < LOOP; i++)
-        {
-            cout << "LOOP " << i + 1 << endl;
-            vector<int> w;
-            dParallel = 0;
-            LocallyGreedyCUDA(w, G0, dParallel, rprate);
-            cudaDeviceSynchronize();
-            trunParallel += dParallel;
 
-            snow = w.size();
-            savg += snow;
+        vector<int> wParallel;
+        dParallel = 0;
+        startTime(&timer);
+        LocallyGreedyCUDA(wParallel, G0, dParallel, rprate);
+        cudaDeviceSynchronize();
+        stopTime(&timer);
+        printElapsedTime(timer, "    GPU time", GREEN);
 
-            if (sbest > snow)
-                sbest = snow;
-            if (sworst < snow)
-                sworst = snow;
-        }
-        trunParallel = trunParallel / LOOP;
-        wsize = savg / LOOP;
+        trunParallel += dParallel;
+
+        snow = wParallel.size();
+
+        // trunParallel = trunParallel / LOOP;
+        // wsize = savg / LOOP;
 
         mtmp += "\t(4/6) OPTIMIZED CUDA Time for find PIDS: " + to_string(trunParallel) + " s\n";
-        mtmp += "\t|P|: \tBEST= " + to_string(sbest) +
-                ", WORST= " + to_string(sworst) +
-                ", AVG= " + to_string(wsize) + "\n";
+        mtmp += "\t|P|: \tBEST= " + to_string(snow) +
+                ", WORST= " + to_string(snow) +
+                ", AVG= " + to_string(snow) + "\n";
         mtmp += "\t(|P|/|V|)*100%=\t" + to_string(1.00 * wsize / gsize * 100) + "\n";
         mtmp += "\tAverage positive rate=\t" + to_string(rprate) + "\n";
 
