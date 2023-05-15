@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cassert>
 #include <ctime>
+#include <cuda_runtime.h>
 #include "mgraph.h"
 #include "LocallyGreedySequential.h"
 #include "LocallyGreedyCorrected.h"
@@ -86,6 +87,7 @@ void loadFile(const string &ifile, mGraph &g, int &gsize)
 
 int main()
 {
+    cudaDeviceSynchronize();
     const int LOOP = 20;
     clock_t t0, t1;
     double d1, d2, d3;
@@ -172,7 +174,8 @@ int main()
         // Optimized
         cout << "Optimized CUDA Locally Greedy" << endl;
         // accumulate the time cost for our algorithm generating a PIDS over LOOP runs
-        trun = 0;
+        double trunParallel = 0;
+        double dParallel = 0;
         // sbest: the minimum size of the output results
         // sworst: the maximum size of the output results
         // savg: accumulate the size of the output results
@@ -182,9 +185,10 @@ int main()
         {
             cout << "LOOP " << i + 1 << endl;
             vector<int> w;
-            d2 = 0;
-            LocallyGreedyCUDA(w, G0, d2, rprate);
-            trun += d2;
+            dParallel = 0;
+            LocallyGreedyCUDA(w, G0, dParallel, rprate);
+            cudaDeviceSynchronize();
+            trunParallel += dParallel;
 
             snow = w.size();
             savg += snow;
@@ -194,10 +198,10 @@ int main()
             if (sworst < snow)
                 sworst = snow;
         }
-        trun = trun / LOOP;
+        trunParallel = trunParallel / LOOP;
         wsize = savg / LOOP;
 
-        mtmp += "\t(4/6) OPTIMIZED CUDA Time for find PIDS: " + to_string(trun) + " s\n";
+        mtmp += "\t(4/6) OPTIMIZED CUDA Time for find PIDS: " + to_string(trunParallel) + " s\n";
         mtmp += "\t|P|: \tBEST= " + to_string(sbest) +
                 ", WORST= " + to_string(sworst) +
                 ", AVG= " + to_string(wsize) + "\n";

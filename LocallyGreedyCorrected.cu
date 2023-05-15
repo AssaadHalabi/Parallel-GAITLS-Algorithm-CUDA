@@ -77,16 +77,16 @@ int LocallyGreedyCUDA(std::vector<int> &x, const mGraph &g, double &tlen, double
     int i, j;
     set<int> s;
 
-    // populate s with all nodes
-    for (i = 0; i < g.MAX_INDEX_OF_NODE; i++)
-    {
-        s.insert(i);
-    }
-
     Edge *pH;
     int da, db;
     int nb, id;
-
+    // populate s with all nodes
+    for (i = 0; i < g.MAX_INDEX_OF_NODE; i++)
+    {
+        pH = g.V[i].headEdge;
+        if (pH != NULL)
+            s.insert(i);
+    }
     std::vector<int> Delta(g.MAX_INDEX_OF_NODE, 0);
     std::vector<int> unsat(g.MAX_INDEX_OF_NODE, 0);
     std::vector<int> fixThre(g.MAX_INDEX_OF_NODE, 0);
