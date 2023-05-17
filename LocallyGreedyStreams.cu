@@ -131,14 +131,11 @@ int LocallyGreedyCUDA(std::vector<int> &x, const mGraph &g, double &tlen, double
 
     cudaStreamSynchronize(stream);
 
-    mynode T[len];
-    std::copy(h_T.begin(), h_T.end(), T);
-
     unordered_set<int> res;
 
     for (i = 0; i < len && sumnd > 0; i++)
     {
-        int vi = T[i].index;
+        int vi = h_T[i].index;
         int R = Delta[vi];
         if (R > 0)
         {
